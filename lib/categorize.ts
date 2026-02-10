@@ -63,7 +63,7 @@ export function categorizeTransaction(
   }
 
   // 5. Simple value transfer — no meaningful input data
-  if ((!input || input === "0x") && tx.value && BigInt(tx.value) > 0n) {
+  if ((!input || input === "0x") && tx.value && BigInt(tx.value) > BigInt(0)) {
     return "transfer";
   }
 
