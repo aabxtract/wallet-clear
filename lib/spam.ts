@@ -4,6 +4,10 @@ import { RawTransaction } from "@/lib/chains";
 // Spam detection heuristics
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Spam keywords
+// ---------------------------------------------------------------------------
+
 const SPAM_KEYWORDS = [
   "visit",
   "claim",
@@ -17,19 +21,17 @@ const SPAM_KEYWORDS = [
   ".net",
   "bonus",
   "voucher",
-  "$ ",
+  "$ ", // Explicitly requested
 ];
 
 const SPAM_TOKENS = new Set<string>([
   // Add known spam contract addresses here as lowercase
-  // "0x...",
 ]);
 
 /**
- * Very-small-value threshold in *wei* — 0.000001 native tokens (1e12).
- * Incoming token transfers below this value are flagged as potential spam.
+ * 0.000001 native tokens (1e12 wei).
  */
-const DUST_THRESHOLD_WEI = BigInt("1000000000000"); // 1e12
+const DUST_THRESHOLD_WEI = BigInt("1000000000000");
 
 /**
  * Determine whether a raw transaction looks like spam.
@@ -39,26 +41,32 @@ const DUST_THRESHOLD_WEI = BigInt("1000000000000"); // 1e12
  * 2. Token name contains suspicious keywords.
  * 3. Token is in SPAM_TOKENS list.
  * 4. Zero value AND no meaningful input data.
- * 5. (TODO) From address has sent to > 100 addresses (requires history).
+ * 5. (TODO) From address has sent to > 100 addresses (requires external history).
  */
 export function isSpamTransaction(
   tx: RawTransaction,
   userAddress: string,
 ): boolean {
-  // const user = userAddress.toLowerCase(); // Unused
-  void userAddress; // Suppress unused warning
+  void userAddress; // Kept for interface compatibility / future rules
+
   const tokenName = (tx.tokenName || "").toLowerCase();
   const contractAddress = (tx.contractAddress || "").toLowerCase();
 
-  // 1. Dust check
+  // Parse value
   let valueWei = BigInt(0);
   try {
-    valueWei = BigInt(tx.value || "0");
-  } catch {}
+    if (tx.value && tx.value !== "0x") {
+      valueWei = BigInt(tx.value);
+    }
+  } catch {
+    // If value is invalid, treat as 0
+  }
 
-  const isDust = valueWei > BigInt(0) && valueWei < DUST_THRESHOLD_WEI;
-
-  if (isDust) {
+  // 1. Dust check (Value > 0 AND Value < 0.000001 native)
+  // Logic: "Value is less than 0.000001" usually implies it's not 0, but is tiny.
+  // Spam usually sends dust to get attention.
+  // If strictly 0, it falls under rule #4 if no input.
+  if (valueWei > 0 && valueWei < DUST_THRESHOLD_WEI) {
     return true;
   }
 
@@ -73,21 +81,16 @@ export function isSpamTransaction(
   }
 
   // 4. Zero value AND no meaningful input data
-  // "Meaningful input" usually means not empty and not just '0x'.
-  // However, method IDs are 10 chars.
+  // "Meaningful input" = something other than '0x' or empty
   const input = tx.input || "0x";
   const hasInput = input.length > 2; // "0x" is length 2
+
   if (valueWei === BigInt(0) && !hasInput) {
-    // A 0-value transfer with no data is often a "cancel" tx or spam,
-    // but usually spam if it's incoming.
-    // If it is incoming to user, it's likely spam or a failed interaction.
-    // Valid 0-value txs exist (e.g. self-cancel), but typically required gas.
-    // The requirement is "Zero value AND no meaningful input data".
-    // We'll mark it true.
     return true;
   }
 
-  // 5. From address honeypot check (skipped - requires history)
+  // 5. From address honeypot check
+  // (Cannot check "sent to > 100 addresses" with current data snapshot)
 
   return false;
 }
