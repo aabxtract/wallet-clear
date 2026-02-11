@@ -52,11 +52,14 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 const PAGE_SIZE = 25;
 
+// Etherscan V2 API — single endpoint for all chains
+const ETHERSCAN_V2_URL = "https://api.etherscan.io/v2/api";
+
 /**
  * Fetch transactions for a given address on a given chain.
  *
- * Hits the block-explorer API for normal txs, ERC-20 transfers, and NFT
- * transfers, then merges & sorts them by timestamp descending.
+ * Uses the Etherscan V2 API with a `chainid` parameter so a single API key
+ * works across Ethereum, BNB Chain, and Polygon.
  *
  * @param address  Wallet address
  * @param chain    Chain key (ethereum | bsc | polygon)
@@ -69,11 +72,11 @@ export async function fetchTransactions(
   page: number = 1,
 ): Promise<RawTransaction[]> {
   const chainConfig = CHAINS[chain];
-  const apiKey = process.env[chainConfig.apiKeyEnv] ?? "";
+  const apiKey = process.env.ETHERSCAN_API_KEY ?? "";
 
   // Build the three API requests in parallel
   const [normalTxs, erc20Txs, nftTxs] = await Promise.all([
-    fetchFromExplorer(chainConfig.apiUrl, {
+    fetchFromExplorer(chainConfig.chainId, {
       module: "account",
       action: "txlist",
       address,
@@ -84,7 +87,7 @@ export async function fetchTransactions(
       sort: "desc",
       apikey: apiKey,
     }),
-    fetchFromExplorer(chainConfig.apiUrl, {
+    fetchFromExplorer(chainConfig.chainId, {
       module: "account",
       action: "tokentx",
       address,
@@ -95,7 +98,7 @@ export async function fetchTransactions(
       sort: "desc",
       apikey: apiKey,
     }),
-    fetchFromExplorer(chainConfig.apiUrl, {
+    fetchFromExplorer(chainConfig.chainId, {
       module: "account",
       action: "tokennfttx",
       address,
@@ -138,12 +141,12 @@ export async function fetchTransactions(
 // ---------------------------------------------------------------------------
 
 async function fetchFromExplorer(
-  apiUrl: string,
+  chainId: number,
   params: Record<string, string>,
 ): Promise<RawTransaction[]> {
   try {
-    const { data } = await axios.get<ExplorerApiResponse>(apiUrl, {
-      params,
+    const { data } = await axios.get<ExplorerApiResponse>(ETHERSCAN_V2_URL, {
+      params: { ...params, chainid: String(chainId) },
       timeout: 15_000,
     });
 

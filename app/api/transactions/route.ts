@@ -4,9 +4,21 @@ import { CHAINS, ChainKey } from "@/constants/chains";
 import { fetchTransactions, fetchTokenPrice } from "@/lib/chains";
 import { parseTransactions } from "@/lib/parser";
 import { ParsedTransaction, WalletSummary } from "@/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    // --- Rate limiting ---
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() ?? "127.0.0.1";
+    const { allowed } = rateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Too many requests. Please wait a moment." },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const { address, chain, page = 1 } = body;
 

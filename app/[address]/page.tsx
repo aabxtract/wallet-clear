@@ -15,6 +15,8 @@ import ChainSelector from "@/components/ChainSelector";
 // Address page
 // ---------------------------------------------------------------------------
 
+type MobileTab = "history" | "chat";
+
 export default function AddressPage({
   params,
 }: {
@@ -31,6 +33,7 @@ export default function AddressPage({
   const [poisoningCount, setPoisoningCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("history");
 
   // ---- Fetch transactions ----
   const fetchData = useCallback(async () => {
@@ -80,17 +83,17 @@ export default function AddressPage({
       : params.address;
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+    <main className="min-h-screen px-4 py-6 sm:py-8 sm:px-6 lg:px-8 max-w-6xl mx-auto">
       {/* ---------------------------------------------------------------- */}
       {/* Header                                                           */}
       {/* ---------------------------------------------------------------- */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
             Wallet Analysis
           </h1>
           <p
-            className="text-[#888] text-sm mt-1 font-mono"
+            className="text-[#888] text-xs sm:text-sm mt-1 font-mono"
             title={params.address}
           >
             {shortAddr}
@@ -116,49 +119,96 @@ export default function AddressPage({
 
       {/* Data */}
       {hasData && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Transactions column */}
-          <div className="lg:col-span-2 space-y-3">
-            {/* Stats bar */}
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-white text-sm font-semibold">
-                {transactions.length} Transactions
-              </span>
-              {spamCount > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400">
-                  {spamCount} spam
-                </span>
-              )}
-              {poisoningCount > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400">
-                  {poisoningCount} poisoning
-                </span>
-              )}
-            </div>
-
-            {/* Transaction cards */}
-            {transactions.map((tx) => (
-              <TransactionCard
-                key={`${tx.hash}-${tx.type}`}
-                transaction={tx}
-                userAddress={params.address}
-              />
-            ))}
+        <>
+          {/* -------------------------------------------------------------- */}
+          {/* Mobile tab bar (visible < lg)                                   */}
+          {/* -------------------------------------------------------------- */}
+          <div className="lg:hidden flex mb-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-1">
+            <button
+              onClick={() => setMobileTab("history")}
+              className={`
+                flex-1 py-2.5 rounded-lg text-sm font-medium
+                transition-colors
+                ${
+                  mobileTab === "history"
+                    ? "bg-[#2a2a2a] text-white"
+                    : "text-[#666] hover:text-[#999]"
+                }
+              `}
+            >
+              📋 History
+            </button>
+            <button
+              onClick={() => setMobileTab("chat")}
+              className={`
+                flex-1 py-2.5 rounded-lg text-sm font-medium
+                transition-colors
+                ${
+                  mobileTab === "chat"
+                    ? "bg-[#2a2a2a] text-white"
+                    : "text-[#666] hover:text-[#999]"
+                }
+              `}
+            >
+              🤖 AI Chat
+            </button>
           </div>
 
-          {/* AI Chat column */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <AiChat
-                transactions={transactions}
-                address={params.address}
-                chain={chain}
-                spamCount={spamCount}
-                poisoningCount={poisoningCount}
-              />
+          {/* -------------------------------------------------------------- */}
+          {/* Desktop: side-by-side grid  |  Mobile: tabbed view             */}
+          {/* -------------------------------------------------------------- */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Transactions column — shown on desktop always, mobile only when history tab */}
+            <div
+              className={`lg:col-span-2 space-y-3 ${
+                mobileTab !== "history" ? "hidden lg:block" : ""
+              }`}
+            >
+              {/* Stats bar */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
+                <span className="text-white text-sm font-semibold">
+                  {transactions.length} Transactions
+                </span>
+                {spamCount > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400">
+                    {spamCount} spam
+                  </span>
+                )}
+                {poisoningCount > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400">
+                    {poisoningCount} poisoning
+                  </span>
+                )}
+              </div>
+
+              {/* Transaction cards */}
+              {transactions.map((tx) => (
+                <TransactionCard
+                  key={`${tx.hash}-${tx.type}`}
+                  transaction={tx}
+                  userAddress={params.address}
+                />
+              ))}
+            </div>
+
+            {/* AI Chat column — shown on desktop always, mobile only when chat tab */}
+            <div
+              className={`lg:col-span-1 ${
+                mobileTab !== "chat" ? "hidden lg:block" : ""
+              }`}
+            >
+              <div className="lg:sticky lg:top-8">
+                <AiChat
+                  transactions={transactions}
+                  address={params.address}
+                  chain={chain}
+                  spamCount={spamCount}
+                  poisoningCount={poisoningCount}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </main>
   );
