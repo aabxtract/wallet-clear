@@ -35,77 +35,61 @@ interface ExplorerApiResponse {
 }
 
 // ---------------------------------------------------------------------------
-// Price cache (5-minute TTL)
+// Etherscan V2 — single base URL for ALL EVM chains
 // ---------------------------------------------------------------------------
 
-interface PriceCacheEntry {
-  price: number;
-  expiry: number;
-}
-
-const priceCache = new Map<string, PriceCacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const ETHERSCAN_V2_URL = "https://api.etherscan.io/v2/api";
 
 // ---------------------------------------------------------------------------
 // fetchTransactions
 // ---------------------------------------------------------------------------
 
-const PAGE_SIZE = 25;
-
-// Etherscan V2 API — single endpoint for all chains
-const ETHERSCAN_V2_URL = "https://api.etherscan.io/v2/api";
-
 /**
- * Fetch transactions for a given address on a given chain.
+ * Fetch transactions for a given address on a given chain
+ * using the Etherscan V2 API.
  *
- * Uses the Etherscan V2 API with a `chainid` parameter so a single API key
- * works across Ethereum, BNB Chain, and Polygon.
+ * Makes 3 parallel requests (normal txs, ERC-20 transfers, NFT transfers),
+ * merges the results, deduplicates by hash, and sorts by timestamp desc.
  *
  * @param address  Wallet address
  * @param chain    Chain key (ethereum | bsc | polygon)
  * @param page     1-indexed page number
- * @returns        Combined array of raw transactions for the requested page
+ * @returns        Merged, deduplicated, sorted array of raw transactions
  */
 export async function fetchTransactions(
   address: string,
   chain: ChainKey,
   page: number = 1,
 ): Promise<RawTransaction[]> {
-  const chainConfig = CHAINS[chain];
+  const chainId = CHAINS[chain].chainId;
   const apiKey = process.env.ETHERSCAN_API_KEY ?? "";
 
   // Build the three API requests in parallel
   const [normalTxs, erc20Txs, nftTxs] = await Promise.all([
-    fetchFromExplorer(chainConfig.chainId, {
+    fetchFromExplorer(chainId, {
       module: "account",
       action: "txlist",
       address,
-      startblock: "0",
-      endblock: "99999999",
-      page: "1",
-      offset: "200", // fetch a larger window so we can merge & paginate locally
+      page: String(page),
+      offset: "25",
       sort: "desc",
       apikey: apiKey,
     }),
-    fetchFromExplorer(chainConfig.chainId, {
+    fetchFromExplorer(chainId, {
       module: "account",
       action: "tokentx",
       address,
-      startblock: "0",
-      endblock: "99999999",
-      page: "1",
-      offset: "200",
+      page: String(page),
+      offset: "25",
       sort: "desc",
       apikey: apiKey,
     }),
-    fetchFromExplorer(chainConfig.chainId, {
+    fetchFromExplorer(chainId, {
       module: "account",
       action: "tokennfttx",
       address,
-      startblock: "0",
-      endblock: "99999999",
-      page: "1",
-      offset: "200",
+      page: String(page),
+      offset: "25",
       sort: "desc",
       apikey: apiKey,
     }),
@@ -119,25 +103,22 @@ export async function fetchTransactions(
   // Merge all transactions
   const combined = [...normalTxs, ...erc20Txs, ...nftTxs];
 
-  // De-duplicate by hash + _txType (same hash can appear in normal & token lists)
+  // Sort by timestamp descending
+  combined.sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp));
+
+  // Deduplicate by transaction hash
   const seen = new Set<string>();
   const unique = combined.filter((tx) => {
-    const key = `${tx.hash}-${tx._txType}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(tx.hash)) return false;
+    seen.add(tx.hash);
     return true;
   });
 
-  // Sort by timestamp descending
-  unique.sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp));
-
-  // Paginate locally
-  const startIdx = (page - 1) * PAGE_SIZE;
-  return unique.slice(startIdx, startIdx + PAGE_SIZE);
+  return unique;
 }
 
 // ---------------------------------------------------------------------------
-// fetchFromExplorer  (internal helper)
+// fetchFromExplorer (internal helper)
 // ---------------------------------------------------------------------------
 
 async function fetchFromExplorer(
@@ -178,21 +159,43 @@ async function fetchFromExplorer(
 }
 
 // ---------------------------------------------------------------------------
-// fetchTokenPrice
+// Token price cache
+// ---------------------------------------------------------------------------
+
+interface PriceCache {
+  prices: Record<string, number> | null;
+  lastFetched: number;
+}
+
+const priceCache: PriceCache = { prices: null, lastFetched: 0 };
+const PRICE_CACHE_TTL = 300_000; // 5 minutes
+
+const PRICE_FALLBACK: Record<string, number> = {
+  ethereum: 0,
+  binancecoin: 0,
+  "matic-network": 0,
+};
+
+// ---------------------------------------------------------------------------
+// fetchTokenPrices
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch the current USD price of a token from CoinGecko.
- * Results are cached for 5 minutes to respect rate limits.
+ * Fetch ETH, BNB, and MATIC prices in a single CoinGecko call.
+ * Results are cached in memory for 5 minutes.
  *
- * @param coingeckoId  CoinGecko asset identifier (e.g. "ethereum")
- * @returns            Current USD price, or 0 on failure
+ * Never throws — returns fallback zeros on failure so price fetch
+ * failures don't block transaction loading.
+ *
+ * @returns  Object mapping coingeckoId → USD price
  */
-export async function fetchTokenPrice(coingeckoId: string): Promise<number> {
-  // Check cache
-  const cached = priceCache.get(coingeckoId);
-  if (cached && Date.now() < cached.expiry) {
-    return cached.price;
+export async function fetchTokenPrices(): Promise<Record<string, number>> {
+  // Return cached if fresh
+  if (
+    priceCache.prices &&
+    Date.now() - priceCache.lastFetched < PRICE_CACHE_TTL
+  ) {
+    return priceCache.prices;
   }
 
   try {
@@ -200,28 +203,45 @@ export async function fetchTokenPrice(coingeckoId: string): Promise<number> {
       "https://api.coingecko.com/api/v3/simple/price",
       {
         params: {
-          ids: coingeckoId,
+          ids: "ethereum,binancecoin,matic-network",
           vs_currencies: "usd",
         },
         timeout: 10_000,
       },
     );
 
-    const price = data[coingeckoId]?.usd ?? 0;
+    const prices: Record<string, number> = {
+      ethereum: data.ethereum?.usd ?? 0,
+      binancecoin: data.binancecoin?.usd ?? 0,
+      "matic-network": data["matic-network"]?.usd ?? 0,
+    };
 
-    // Store in cache
-    priceCache.set(coingeckoId, {
-      price,
-      expiry: Date.now() + CACHE_TTL_MS,
-    });
+    // Update cache
+    priceCache.prices = prices;
+    priceCache.lastFetched = Date.now();
 
-    return price;
+    return prices;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(`[chains] CoinGecko price fetch failed: ${error.message}`);
     } else {
-      console.error("[chains] Unexpected error fetching token price:", error);
+      console.error("[chains] Unexpected error fetching token prices:", error);
     }
-    return 0;
+    return PRICE_FALLBACK;
   }
+}
+
+// ---------------------------------------------------------------------------
+// getExplorerUrl
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a full block-explorer URL for a transaction hash.
+ *
+ * @param hash   Transaction hash
+ * @param chain  Chain key (ethereum | bsc | polygon)
+ * @returns      Full URL, e.g. https://etherscan.io/tx/0x1234…
+ */
+export function getExplorerUrl(hash: string, chain: ChainKey): string {
+  return `${CHAINS[chain].explorer}/tx/${hash}`;
 }

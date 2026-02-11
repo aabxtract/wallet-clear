@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAddress } from "ethers";
 import { CHAINS, ChainKey } from "@/constants/chains";
-import { fetchTransactions, fetchTokenPrice } from "@/lib/chains";
+import { fetchTransactions, fetchTokenPrices } from "@/lib/chains";
 import { parseTransactions } from "@/lib/parser";
 import { ParsedTransaction, WalletSummary } from "@/types";
 import { rateLimit } from "@/lib/rate-limit";
@@ -44,11 +44,13 @@ export async function POST(request: Request) {
     const chainKey = chain as ChainKey;
     const chainConfig = CHAINS[chainKey];
 
-    // 2. Fetch data (Transactions + Token Price)
-    const [rawTxs, tokenPrice] = await Promise.all([
+    // 2. Fetch data (Transactions + Token Prices in parallel)
+    const [rawTxs, prices] = await Promise.all([
       fetchTransactions(address, chainKey, page),
-      fetchTokenPrice(chainConfig.coingeckoId),
+      fetchTokenPrices(),
     ]);
+
+    const tokenPrice = prices[chainConfig.coingeckoId] ?? 0;
 
     // 3. Parse & Analyze
     const transactions: ParsedTransaction[] = parseTransactions(
