@@ -2,13 +2,13 @@
 
 **Understand your crypto wallet in plain English.**
 
-WalletClear fetches your on-chain transaction history using block explorer APIs, categorises each transaction (transfers, swaps, approvals, NFTs), flags spam tokens and address-poisoning attempts, and lets you chat with an AI assistant that explains everything in plain English.
+WalletClear fetches your on-chain transaction history using the Etherscan V2 API, categorises each transaction (transfers, swaps, approvals, NFTs), flags spam tokens and address-poisoning attempts, and lets you chat with an AI assistant that explains everything in plain English.
 
 ## Features
 
 - 🔍 **Human-readable transactions** — no more decoding hex
 - 🛡️ **Scam detection** — automatic spam flagging & address poisoning warnings
-- ⛓️ **Multi-chain** — Ethereum, BNB Chain, Polygon
+- ⛓️ **Multi-chain** — Ethereum, BNB Chain, Polygon (one API key for all)
 - 🤖 **AI Chat** — ask questions about your wallet powered by Gemini
 
 ## Getting Started
@@ -30,23 +30,23 @@ cp .env.example .env.local
 Then edit `.env.local`:
 
 ```env
-# Block explorer keys
+# One key covers all EVM chains via Etherscan V2
 ETHERSCAN_API_KEY=your_etherscan_key
-BSCSCAN_API_KEY=your_bscscan_key
-POLYGONSCAN_API_KEY=your_polygonscan_key
 
 # AI chat (server-side only)
 GEMINI_API_KEY=your_gemini_key
+
+# Optional — free tier works without a key
+COINGECKO_API_KEY=
 ```
 
 ### Where to get API keys
 
-| Key                   | Source           | Link                                                             |
-| --------------------- | ---------------- | ---------------------------------------------------------------- |
-| `ETHERSCAN_API_KEY`   | Etherscan        | [etherscan.io/apis](https://etherscan.io/apis)                   |
-| `BSCSCAN_API_KEY`     | BscScan          | [bscscan.com/apis](https://bscscan.com/apis)                     |
-| `POLYGONSCAN_API_KEY` | PolygonScan      | [polygonscan.com/apis](https://polygonscan.com/apis)             |
-| `GEMINI_API_KEY`      | Google AI Studio | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| Key                 | Source                                | Link                                                             |
+| ------------------- | ------------------------------------- | ---------------------------------------------------------------- |
+| `ETHERSCAN_API_KEY` | Etherscan V2 (one key for all chains) | [etherscan.io/apis](https://etherscan.io/apis)                   |
+| `GEMINI_API_KEY`    | Google AI Studio                      | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| `COINGECKO_API_KEY` | CoinGecko (free tier needs no key)    | [coingecko.com](https://www.coingecko.com/en/api)                |
 
 ### 3. Run the development server
 
@@ -66,10 +66,10 @@ npx vercel
 
 ### Set environment variables
 
-Add all four API keys in the Vercel dashboard:
+Add your API keys in the Vercel dashboard:
 
 1. Go to your project → **Settings** → **Environment Variables**
-2. Add each key from `.env.example`
+2. Add `ETHERSCAN_API_KEY` and `GEMINI_API_KEY`
 3. Set them for **Production**, **Preview**, and **Development**
 
 ### Deploy to production
@@ -84,7 +84,7 @@ npx vercel --prod
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **AI**: Google Gemini 1.5 Flash
-- **APIs**: Etherscan, BscScan, PolygonScan, CoinGecko
+- **APIs**: Etherscan V2 (all chains), CoinGecko
 
 ## Project Structure
 
@@ -104,5 +104,6 @@ types/                  # TypeScript type definitions
 ## Security Notes
 
 - **Read-only** — never asks for private keys or seed phrases
-- `GEMINI_API_KEY` is **server-side only** — never exposed to the browser
-- Block explorer keys are safe to expose (they are public API rate-limit keys)
+- All API keys are **server-side only** — used only in `app/api/` routes
+- No keys are prefixed with `NEXT_PUBLIC_` or exposed to the browser
+- `next.config.js` does not forward any keys to the client bundle
