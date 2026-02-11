@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WalletClear
+
+**Understand your crypto wallet in plain English.**
+
+WalletClear fetches your on-chain transaction history using block explorer APIs, categorises each transaction (transfers, swaps, approvals, NFTs), flags spam tokens and address-poisoning attempts, and lets you chat with an AI assistant that explains everything in plain English.
+
+## Features
+
+- 🔍 **Human-readable transactions** — no more decoding hex
+- 🛡️ **Scam detection** — automatic spam flagging & address poisoning warnings
+- ⛓️ **Multi-chain** — Ethereum, BNB Chain, Polygon
+- 🤖 **AI Chat** — ask questions about your wallet powered by Gemini
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment variables
+
+Copy the example file and fill in your API keys:
+
+```bash
+cp .env.example .env.local
+```
+
+Then edit `.env.local`:
+
+```env
+# Block explorer keys
+ETHERSCAN_API_KEY=your_etherscan_key
+BSCSCAN_API_KEY=your_bscscan_key
+POLYGONSCAN_API_KEY=your_polygonscan_key
+
+# AI chat (server-side only)
+GEMINI_API_KEY=your_gemini_key
+```
+
+### Where to get API keys
+
+| Key                   | Source           | Link                                                             |
+| --------------------- | ---------------- | ---------------------------------------------------------------- |
+| `ETHERSCAN_API_KEY`   | Etherscan        | [etherscan.io/apis](https://etherscan.io/apis)                   |
+| `BSCSCAN_API_KEY`     | BscScan          | [bscscan.com/apis](https://bscscan.com/apis)                     |
+| `POLYGONSCAN_API_KEY` | PolygonScan      | [polygonscan.com/apis](https://polygonscan.com/apis)             |
+| `GEMINI_API_KEY`      | Google AI Studio | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+
+### 3. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploying to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Quick deploy
 
-## Learn More
+```bash
+npx vercel
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Set environment variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Add all four API keys in the Vercel dashboard:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Go to your project → **Settings** → **Environment Variables**
+2. Add each key from `.env.example`
+3. Set them for **Production**, **Preview**, and **Development**
 
-## Deploy on Vercel
+### Deploy to production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx vercel --prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **AI**: Google Gemini 1.5 Flash
+- **APIs**: Etherscan, BscScan, PolygonScan, CoinGecko
+
+## Project Structure
+
+```
+app/
+  page.tsx              # Landing page
+  [address]/page.tsx    # Wallet analysis page
+  api/
+    chat/route.ts       # AI chat endpoint
+    transactions/route.ts # Transaction fetching endpoint
+components/             # React components
+lib/                    # Data fetching, parsing, spam detection
+constants/              # Chain configurations
+types/                  # TypeScript type definitions
+```
+
+## Security Notes
+
+- **Read-only** — never asks for private keys or seed phrases
+- `GEMINI_API_KEY` is **server-side only** — never exposed to the browser
+- Block explorer keys are safe to expose (they are public API rate-limit keys)
