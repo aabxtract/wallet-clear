@@ -49,11 +49,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       console.error("[chat] GEMINI_API_KEY is not set");
       return NextResponse.json(
-        { message: "AI service is not configured" },
+        { message: "AI service is not configured. Please set GEMINI_API_KEY in your .env.local file." },
         { status: 500 },
       );
     }
@@ -112,9 +112,13 @@ ${JSON.stringify(transactions ?? [], null, 2)}`;
       suggestedQuestions: SUGGESTED_QUESTIONS,
     });
   } catch (error) {
-    console.error("[chat] API Error:", error);
+    const errMsg =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("[chat] API Error:", errMsg, error);
     return NextResponse.json(
-      { message: "Failed to process chat message" },
+      {
+        message: `Failed to get AI response: ${errMsg}`,
+      },
       { status: 500 },
     );
   }
