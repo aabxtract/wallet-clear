@@ -107,6 +107,10 @@ export default function AiChat({
 
         const data = await res.json();
 
+        if (!res.ok) {
+          throw new Error(data.message ?? `Request failed (${res.status})`);
+        }
+
         const aiMsg: ChatMessageType = {
           role: "ai",
           content:
@@ -165,9 +169,8 @@ export default function AiChat({
         {/* Status dot */}
         <div className="ml-auto flex items-center gap-1.5">
           <span
-            className={`w-2 h-2 rounded-full ${
-              loading ? "bg-yellow-400 animate-pulse" : "bg-green-400"
-            }`}
+            className={`w-2 h-2 rounded-full ${loading ? "bg-yellow-400 animate-pulse" : "bg-green-400"
+              }`}
           />
           <span className="text-[#555] text-xs">
             {loading ? "Thinking" : "Online"}
