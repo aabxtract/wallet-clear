@@ -36,6 +36,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
+  other: {
+    "talentapp:project_verification": "7b47c6416631c79148d63efdaa72fa9d6e5452609e9375403b0c39583edc11c0e163ea951abd1b16a97b511314276154a79ea868db9258a67728debe7b0baccd",
+  },
 };
 
 export const viewport: Viewport = {
