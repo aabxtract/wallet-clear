@@ -42,6 +42,7 @@ export function detectPoisoning(
   tx: RawTransaction,
   userAddress: string,
   allTxs: RawTransaction[],
+  decimals: number = 18,
 ): PoisoningResult {
   const user = userAddress.toLowerCase();
   const toAddr = (tx.to || "").toLowerCase();
@@ -53,14 +54,15 @@ export function detectPoisoning(
   }
 
   // 2. Only check DUST transactions (< 0.001 native token)
-  // 0.001 ETH = 1e15 wei
-  const POISON_THRESHOLD_WEI = BigInt("1000000000000000"); // 1e15
-  let valueWei = BigInt(0);
+  // We calculate the threshold based on decimals (e.g., 10^(decimals - 3) for 1e-3 units)
+  const poisonThreshold = decimals >= 3 ? BigInt("1" + "0".repeat(decimals - 3)) : BigInt(0);
+
+  let valueNative = BigInt(0);
   try {
-    valueWei = BigInt(tx.value || "0");
+    valueNative = BigInt(tx.value || "0");
   } catch {}
 
-  if (valueWei >= POISON_THRESHOLD_WEI) {
+  if (poisonThreshold > 0 && valueNative >= poisonThreshold) {
     // Too expensive to be a likely poisoning attack (or legitimate transfer)
     return { isPoisoning: false };
   }

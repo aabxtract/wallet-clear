@@ -181,6 +181,7 @@ export function parseTransactions(
       tx,
       userAddress,
       txs,
+      decimals,
     );
 
     // --- Description ---
