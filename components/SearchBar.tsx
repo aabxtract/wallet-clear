@@ -24,8 +24,11 @@ export default function SearchBar({ chain }: SearchBarProps) {
       return;
     }
 
-    if (!isAddress(trimmed)) {
-      setError("Invalid wallet address. Please enter a valid 0x address.");
+    const isEvm = isAddress(trimmed);
+    const isStacks = (trimmed.startsWith("SP") || trimmed.startsWith("ST")) && trimmed.length >= 28;
+
+    if (!isEvm && !isStacks) {
+      setError("Invalid wallet address. Please enter a valid 0x or Stacks address.");
       return;
     }
 
@@ -42,7 +45,7 @@ export default function SearchBar({ chain }: SearchBarProps) {
             setAddress(e.target.value);
             if (error) setError("");
           }}
-          placeholder="Enter wallet address (0x...) or ENS name"
+          placeholder="Enter Ethereum or Stacks address"
           className={`
             w-full px-5 py-4 pr-[120px] rounded-2xl
             bg-[#1a1a1a] text-white text-base
