@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@hirosystems/chainhooks-client": "^2.1.1",
     "axios": "^1.13.5",
     "ethers": "^6.16.0",
     "next": "14.2.35",
