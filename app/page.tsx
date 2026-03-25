@@ -23,7 +23,7 @@ const FEATURES = [
   {
     icon: "⛓️",
     title: "Multi-Chain",
-    description: "Supports Ethereum, BNB Chain and Polygon",
+    description: "Supports Ethereum, BNB Chain, Polygon and Stacks",
   },
 ];
 

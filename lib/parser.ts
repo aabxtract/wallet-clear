@@ -160,7 +160,8 @@ export function parseTransactions(
     const gasUsedNum = BigInt(tx.gasUsed || "0");
     const gasPriceNum = BigInt(tx.gasPrice || "0");
     const gasWei = gasUsedNum * gasPriceNum;
-    const gasFormatted = fromWei(gasWei.toString(), 18);
+    const gasDecimals = chain === "stacks" ? 6 : 18;
+    const gasFormatted = fromWei(gasWei.toString(), gasDecimals);
     const gasNumeric = parseFloat(gasFormatted) || 0;
     const gasUsd =
       gasNumeric > 0 && tokenPrice > 0
@@ -175,7 +176,7 @@ export function parseTransactions(
     const explorerUrl = `${chainConfig.explorer}/tx/${tx.hash}`;
 
     // --- Spam & poisoning ---
-    const isSpam = type === "spam" || isSpamTransaction(tx, userAddress);
+    const isSpam = type === "spam" || isSpamTransaction(tx, userAddress, decimals);
     const { isPoisoning, poisoningTarget } = detectPoisoning(
       tx,
       userAddress,

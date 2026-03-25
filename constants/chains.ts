@@ -29,6 +29,16 @@ export const CHAINS = {
     color: "#8247E5",
     coingeckoId: "matic-network",
   },
+  stacks: {
+    id: 1,
+    name: "Stacks",
+    symbol: "STX",
+    chainId: 1,
+    explorer: "https://explorer.hiro.so",
+    icon: "ⓢ",
+    color: "#5546FF",
+    coingeckoId: "blockstack",
+  },
 } as const;
 
 export type ChainKey = keyof typeof CHAINS;

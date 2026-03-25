@@ -39,6 +39,7 @@ interface ExplorerApiResponse {
 // ---------------------------------------------------------------------------
 
 const ETHERSCAN_V2_URL = "https://api.etherscan.io/v2/api";
+const HIRO_API_URL = "https://api.mainnet.hiro.so/extended/v1";
 
 // ---------------------------------------------------------------------------
 // fetchTransactions
@@ -61,6 +62,10 @@ export async function fetchTransactions(
   chain: ChainKey,
   page: number = 1,
 ): Promise<RawTransaction[]> {
+  if (chain === "stacks") {
+    return fetchStacksTransactions(address, page);
+  }
+
   const chainId = CHAINS[chain].chainId;
   const apiKey = process.env.ETHERSCAN_API_KEY ?? "";
 
@@ -159,6 +164,65 @@ async function fetchFromExplorer(
 }
 
 // ---------------------------------------------------------------------------
+// fetchStacksTransactions (internal helper)
+// ---------------------------------------------------------------------------
+
+async function fetchStacksTransactions(
+  address: string,
+  page: number = 1,
+): Promise<RawTransaction[]> {
+  const limit = 25;
+  const offset = (page - 1) * limit;
+  const url = `${HIRO_API_URL}/address/${address}/transactions?limit=${limit}&offset=${offset}`;
+
+  try {
+    const { data } = await axios.get(url, { timeout: 15_000 });
+    const results = data.results || [];
+
+    return results.map((stxTx: any) => {
+      // Basic normalization from Stacks Hiro API -> RawTransaction interface
+      // Stacks uses microSTX (6 decimals), STX token transfer amount is in 'token_transfer'
+      // Normal transactions use 'stx_transfers' if they are pure STX transfers but simpler
+      // is checking the top-level 'token_transfer' for STX-only, OR 'stx_transfers'.
+      
+      let to = "";
+      let value = "0";
+
+      if (stxTx.tx_type === "token_transfer") {
+        to = stxTx.token_transfer.recipient_address;
+        value = stxTx.token_transfer.amount; // in microSTX
+      } else if (stxTx.stx_transfers && stxTx.stx_transfers.length > 0) {
+        to = stxTx.stx_transfers[0].recipient;
+        value = stxTx.stx_transfers[0].amount;
+      }
+
+      return {
+        hash: stxTx.tx_id,
+        timeStamp: String(stxTx.burn_block_time),
+        from: stxTx.sender_address,
+        to,
+        value,
+        gas: "0",
+        gasUsed: stxTx.fee_rate || "0", // Map fee to gasUsed for simplicity in parser
+        gasPrice: "1", // Map fee to gasUsed, set price to 1
+        isError: stxTx.tx_status === "success" ? "0" : "1",
+        blockNumber: String(stxTx.block_height),
+        input: "",
+        contractAddress: stxTx.tx_type === "smart_contract" ? stxTx.smart_contract?.contract_id : "",
+        functionName: stxTx.tx_type === "contract_call" ? stxTx.contract_call?.function_name : "",
+        tokenName: "Stacks",
+        tokenSymbol: "STX",
+        tokenDecimal: "6",
+        _txType: stxTx.tx_type === "token_transfer" ? "normal" : "normal",
+      };
+    });
+  } catch (error) {
+    console.error("[chains] Stacks API fetch failed:", error);
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Token price cache
 // ---------------------------------------------------------------------------
 
@@ -174,6 +238,7 @@ const PRICE_FALLBACK: Record<string, number> = {
   ethereum: 0,
   binancecoin: 0,
   "matic-network": 0,
+  blockstack: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -203,7 +268,7 @@ export async function fetchTokenPrices(): Promise<Record<string, number>> {
       "https://api.coingecko.com/api/v3/simple/price",
       {
         params: {
-          ids: "ethereum,binancecoin,matic-network",
+          ids: "ethereum,binancecoin,matic-network,blockstack",
           vs_currencies: "usd",
         },
         timeout: 10_000,
@@ -214,6 +279,7 @@ export async function fetchTokenPrices(): Promise<Record<string, number>> {
       ethereum: data.ethereum?.usd ?? 0,
       binancecoin: data.binancecoin?.usd ?? 0,
       "matic-network": data["matic-network"]?.usd ?? 0,
+      blockstack: data.blockstack?.usd ?? 0,
     };
 
     // Update cache
@@ -239,9 +305,12 @@ export async function fetchTokenPrices(): Promise<Record<string, number>> {
  * Build a full block-explorer URL for a transaction hash.
  *
  * @param hash   Transaction hash
- * @param chain  Chain key (ethereum | bsc | polygon)
- * @returns      Full URL, e.g. https://etherscan.io/tx/0x1234…
+ * @param chain  Chain key (ethereum | bsc | polygon | stacks)
+ * @returns      Full URL
  */
 export function getExplorerUrl(hash: string, chain: ChainKey): string {
+  if (chain === "stacks") {
+    return `${CHAINS[chain].explorer}/txid/${hash}?chain=mainnet`;
+  }
   return `${CHAINS[chain].explorer}/tx/${hash}`;
 }

@@ -12,6 +12,7 @@ const CHAIN_LIST: { key: ChainKey; label: string }[] = [
   { key: "ethereum", label: "ETH" },
   { key: "bsc", label: "BNB" },
   { key: "polygon", label: "POLYGON" },
+  { key: "stacks", label: "STACKS" },
 ];
 
 export default function ChainSelector({

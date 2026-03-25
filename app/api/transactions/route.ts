@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     const { address, chain, page = 1 } = body;
 
     // 1. Validation
-    if (!address || typeof address !== "string" || !isAddress(address)) {
+    const isEvmAddress = isAddress(address);
+    const isStacksAddress = (address.startsWith("SP") || address.startsWith("ST")) && address.length >= 28;
+
+    if (!address || typeof address !== "string" || (!isEvmAddress && !isStacksAddress)) {
       return NextResponse.json(
         { message: "Invalid wallet address" },
         { status: 400 },

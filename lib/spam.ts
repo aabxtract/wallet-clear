@@ -46,6 +46,7 @@ const DUST_THRESHOLD_WEI = BigInt("1000000000000");
 export function isSpamTransaction(
   tx: RawTransaction,
   userAddress: string,
+  decimals: number = 18,
 ): boolean {
   void userAddress; // Kept for interface compatibility / future rules
 
@@ -53,20 +54,20 @@ export function isSpamTransaction(
   const contractAddress = (tx.contractAddress || "").toLowerCase();
 
   // Parse value
-  let valueWei = BigInt(0);
+  let valueNative = BigInt(0);
   try {
     if (tx.value && tx.value !== "0x") {
-      valueWei = BigInt(tx.value);
+      valueNative = BigInt(tx.value);
     }
   } catch {
     // If value is invalid, treat as 0
   }
 
   // 1. Dust check (Value > 0 AND Value < 0.000001 native)
-  // Logic: "Value is less than 0.000001" usually implies it's not 0, but is tiny.
-  // Spam usually sends dust to get attention.
-  // If strictly 0, it falls under rule #4 if no input.
-  if (valueWei > 0 && valueWei < DUST_THRESHOLD_WEI) {
+  // We calculate the threshold based on decimals (e.g., 10^(decimals - 6) for 1e-6 units)
+  const dustThreshold = decimals >= 6 ? BigInt("1" + "0".repeat(decimals - 6)) : BigInt(0);
+
+  if (valueNative > 0 && dustThreshold > 0 && valueNative < dustThreshold) {
     return true;
   }
 
@@ -85,7 +86,7 @@ export function isSpamTransaction(
   const input = tx.input || "0x";
   const hasInput = input.length > 2; // "0x" is length 2
 
-  if (valueWei === BigInt(0) && !hasInput) {
+  if (valueNative === BigInt(0) && !hasInput) {
     return true;
   }
 
