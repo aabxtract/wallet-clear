@@ -21,18 +21,23 @@ import {
 } from "@tanstack/react-query";
 import "@rainbow-me/rainbowkit/styles.css";
 
-// Create a client
-const queryClient = new QueryClient();
-
-// Configure Wagmi & RainbowKit
+// Configure Wagmi via RainbowKit
 const config = getDefaultConfig({
   appName: "WalletClear",
-  projectId: "ff696238b93568c07c1348be88b5b54a", // Public sample projectId for demo purposes
+  projectId: "ff696238b93568c07c1348be88b5b54a", // Public sample projectId
   chains: [mainnet, polygon, bsc, optimism, arbitrum, base],
   ssr: true,
 });
 
+const queryClient = new QueryClient();
+
 export function WalletProviders({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -43,7 +48,7 @@ export function WalletProviders({ children }: { children: React.ReactNode }) {
             borderRadius: "large",
           })}
         >
-          {children}
+          {mounted && children}
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { showConnect, authenticate } from "@stacks/connect";
+import { authenticate } from "@stacks/connect";
 import { userSession, getStacksAddress } from "@/lib/stacks";
 import { useAccount, useDisconnect } from "wagmi";
 
@@ -20,12 +20,11 @@ export default function WalletConnect() {
   }, []);
 
   const connectStacks = () => {
-    showConnect({
+    authenticate({
       appDetails: {
         name: "WalletClear",
         icon: "/favicon.svg",
       },
-      redirectTo: "/",
       onFinish: () => {
         setIsStacksConnected(true);
         setStacksAddress(getStacksAddress());
