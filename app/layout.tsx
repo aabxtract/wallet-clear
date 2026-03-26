@@ -51,6 +51,8 @@ export const viewport: Viewport = {
 // Root layout (server component)
 // ---------------------------------------------------------------------------
 
+import { WalletProviders } from "@/components/WalletProviders";
+
 export default function RootLayout({
   children,
 }: {
@@ -59,7 +61,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#0f0f0f] text-white min-h-screen antialiased">
-        {children}
+        <WalletProviders>
+          {children}
+        </WalletProviders>
       </body>
     </html>
   );

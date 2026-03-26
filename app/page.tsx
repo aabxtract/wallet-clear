@@ -31,46 +31,46 @@ const FEATURES = [
 // Landing page
 // ---------------------------------------------------------------------------
 
+import WalletConnect from "@/components/WalletConnect";
+import WalletBalance from "@/components/WalletBalance";
+
 export default function Home() {
   const [selectedChain, setSelectedChain] = useState<ChainKey>("ethereum");
 
   return (
     <main className="flex flex-col items-center min-h-screen px-4 py-12 sm:py-20">
-      {/* ---------------------------------------------------------------- */}
-      {/* Hero section                                                     */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Wallet Connect Header */}
+      <div className="absolute top-6 right-6 hidden md:block">
+        <WalletConnect />
+      </div>
+
+      <div className="flex md:hidden mb-8">
+        <WalletConnect />
+      </div>
+
+      {/* Hero section */}
       <section className="flex flex-col items-center text-center max-w-3xl mt-8 sm:mt-16">
-        {/* Title */}
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-[#627EEA] bg-clip-text text-transparent">
           WalletClear
         </h1>
-
-        {/* Tagline */}
         <p className="mt-5 text-lg sm:text-xl text-[#ccc] font-medium">
           Understand your crypto wallet in plain English
         </p>
-
-        {/* Sub-tagline */}
         <p className="mt-3 text-sm sm:text-base text-[#888] max-w-md leading-relaxed">
-          Paste any wallet address to see your transaction history without the
-          confusion
+          Paste any wallet address or connect your wallet to see your history and balance.
         </p>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Search section                                                   */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="flex flex-col items-center w-full max-w-2xl mt-10 sm:mt-14 gap-6">
-        {/* Chain selector */}
-        <ChainSelector selected={selectedChain} onChange={setSelectedChain} />
+      {/* Dashboard Section */}
+      <WalletBalance />
 
-        {/* Address input */}
+      {/* Search section */}
+      <section className="flex flex-col items-center w-full max-w-2xl mt-10 sm:mt-14 gap-6">
+        <ChainSelector selected={selectedChain} onChange={setSelectedChain} />
         <SearchBar chain={selectedChain} />
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Feature cards                                                    */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Feature cards */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mt-16 sm:mt-20">
         {FEATURES.map((feature) => (
           <div
@@ -93,9 +93,7 @@ export default function Home() {
         ))}
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Footer                                                           */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Footer */}
       <footer className="mt-auto pt-16 pb-8">
         <p className="text-[#555] text-xs sm:text-sm tracking-wide">
           Not a wallet. Read-only. Your keys stay yours.
