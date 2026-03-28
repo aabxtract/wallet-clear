@@ -4,11 +4,9 @@ import React, { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { authenticate } from "@stacks/connect";
 import { userSession, getStacksAddress } from "@/lib/stacks";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
 
 export default function WalletConnect() {
-  const { isConnected: isEvmConnected, address: evmAddress } = useAccount();
-  const { disconnect: disconnectEvm } = useDisconnect();
   const [isStacksConnected, setIsStacksConnected] = useState(false);
   const [stacksAddress, setStacksAddress] = useState<string | null>(null);
 

@@ -7,7 +7,6 @@ import { userSession, getStacksAddress } from "@/lib/stacks";
 
 export default function WalletBalance() {
   const { isConnected: isEvmConnected, address: evmAddress } = useAccount();
-  const chainId = useChainId();
   const { data: evmBalance } = useBalance({ address: evmAddress });
   const [stacksData, setStacksData] = useState<{ balance: string; tokens: any[] } | null>(null);
   const [loadingStacks, setLoadingStacks] = useState(false);
