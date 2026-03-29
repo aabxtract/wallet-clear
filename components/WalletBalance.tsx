@@ -53,23 +53,23 @@ export default function WalletBalance() {
     <section className="w-full max-w-4xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
       {/* EVM Balance */}
       {isEvmConnected && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 flex flex-col gap-4">
+        <div className="bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#2a2a2a] rounded-2xl p-6 flex flex-col gap-4 shadow-sm dark:shadow-none">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium text-[#888] uppercase tracking-wider">EVM Wallet</h3>
             <span className="text-xs bg-[#627EEA]/20 text-[#627EEA] px-2 py-1 rounded-md font-bold">L1/L2</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-3xl font-bold text-white">
+            <span className="text-3xl font-bold text-neutral-900 dark:text-white">
               {evmBalance?.formatted.slice(0, 8)} {evmBalance?.symbol}
             </span>
-            <span className="text-xs text-[#555] mt-1 break-all">{evmAddress}</span>
+            <span className="text-xs text-neutral-400 dark:text-[#555] mt-1 break-all">{evmAddress}</span>
           </div>
           
-          <div className="mt-4 border-t border-[#222] pt-4">
-            <h4 className="text-xs font-semibold text-[#888] uppercase mb-3">Native Token</h4>
+          <div className="mt-4 border-t border-neutral-100 dark:border-[#222] pt-4">
+            <h4 className="text-xs font-semibold text-neutral-400 dark:text-[#888] uppercase mb-3">Native Token</h4>
             <div className="flex items-center justify-between text-sm py-1">
-              <span className="text-[#ccc]">{evmBalance?.symbol}</span>
-              <span className="text-white font-medium">{evmBalance?.formatted.slice(0, 8)}</span>
+              <span className="text-neutral-500 dark:text-[#ccc]">{evmBalance?.symbol}</span>
+              <span className="text-neutral-900 dark:text-white font-medium">{evmBalance?.formatted.slice(0, 8)}</span>
             </div>
             <p className="text-[10px] text-[#444] mt-4 flex items-center justify-center italic">
               * Connect specialized wallet explorer to see ERC-20 tokens
@@ -80,32 +80,32 @@ export default function WalletBalance() {
 
       {/* Stacks Balance */}
       {userSession.isUserSignedIn() && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-6 flex flex-col gap-4">
+        <div className="bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#2a2a2a] rounded-2xl p-6 flex flex-col gap-4 shadow-sm dark:shadow-none">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium text-[#888] uppercase tracking-wider">Stacks Wallet</h3>
             <span className="text-xs bg-[#5546FF]/20 text-[#5546FF] px-2 py-1 rounded-md font-bold">STX</span>
           </div>
           <div className="flex flex-col">
             {loadingStacks ? (
-              <span className="text-xl font-bold text-white">Loading...</span>
+              <span className="text-xl font-bold text-neutral-900 dark:text-white">Loading...</span>
             ) : (
               <>
-                <span className="text-3xl font-bold text-white">
+                <span className="text-3xl font-bold text-neutral-900 dark:text-white">
                   {stacksData?.balance || "0.00"} STX
                 </span>
-                <span className="text-xs text-[#555] mt-1 break-all">{getStacksAddress()}</span>
+                <span className="text-xs text-neutral-400 dark:text-[#555] mt-1 break-all">{getStacksAddress()}</span>
               </>
             )}
           </div>
 
-          <div className="mt-4 border-t border-[#222] pt-4">
-            <h4 className="text-xs font-semibold text-[#888] uppercase mb-3">Fungible Tokens</h4>
+          <div className="mt-4 border-t border-neutral-100 dark:border-[#222] pt-4">
+            <h4 className="text-xs font-semibold text-neutral-400 dark:text-[#888] uppercase mb-3">Fungible Tokens</h4>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-[120px] pr-2 custom-scrollbar">
               {stacksData?.tokens && stacksData.tokens.length > 0 ? (
                 stacksData.tokens.map((token, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-[#222]/50 last:border-0">
-                    <span className="text-[#ccc]">{token.symbol}</span>
-                    <span className="text-white font-medium">{token.balance}</span>
+                  <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-neutral-100 dark:border-[#222]/50 last:border-0">
+                    <span className="text-neutral-500 dark:text-[#ccc]">{token.symbol}</span>
+                    <span className="text-neutral-900 dark:text-white font-medium">{token.balance}</span>
                   </div>
                 ))
               ) : (

@@ -52,6 +52,7 @@ export const viewport: Viewport = {
 // ---------------------------------------------------------------------------
 
 import { WalletProviders } from "@/components/WalletProviders";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -59,11 +60,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-[#0f0f0f] text-white min-h-screen antialiased">
-        <WalletProviders>
-          {children}
-        </WalletProviders>
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <WalletProviders>{children}</WalletProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

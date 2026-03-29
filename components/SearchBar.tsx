@@ -48,10 +48,10 @@ export default function SearchBar({ chain }: SearchBarProps) {
           placeholder="Enter Ethereum or Stacks address"
           className={`
             w-full px-5 py-4 pr-[120px] rounded-2xl
-            bg-[#1a1a1a] text-white text-base
-            placeholder-[#555] outline-none
-            border transition-all duration-200
-            ${error ? "border-red-500/60" : "border-[#2a2a2a] focus:border-[#627EEA]"}
+            bg-white dark:bg-[#1a1a1a] text-neutral-900 dark:text-white text-base
+            placeholder-neutral-400 dark:placeholder-[#555] outline-none
+            border transition-all duration-200 shadow-sm dark:shadow-none
+            ${error ? "border-red-500/60" : "border-neutral-200 dark:border-[#2a2a2a] focus:border-indigo-500 dark:focus:border-[#627EEA]"}
           `}
           spellCheck={false}
           autoComplete="off"

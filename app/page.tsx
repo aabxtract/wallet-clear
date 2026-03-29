@@ -33,30 +33,33 @@ const FEATURES = [
 
 import WalletConnect from "@/components/WalletConnect";
 import WalletBalance from "@/components/WalletBalance";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
   const [selectedChain, setSelectedChain] = useState<ChainKey>("ethereum");
 
   return (
     <main className="flex flex-col items-center min-h-screen px-4 py-12 sm:py-20">
-      {/* Wallet Connect Header */}
-      <div className="absolute top-6 right-6 hidden md:block">
+      {/* Theme & Wallet Connect Header */}
+      <div className="absolute top-6 right-6 hidden md:flex items-center gap-4">
+        <ThemeToggle />
         <WalletConnect />
       </div>
 
-      <div className="flex md:hidden mb-8">
+      <div className="flex md:hidden mb-8 items-center gap-4">
+        <ThemeToggle />
         <WalletConnect />
       </div>
 
       {/* Hero section */}
       <section className="flex flex-col items-center text-center max-w-3xl mt-8 sm:mt-16">
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-[#627EEA] bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-900 to-[#627EEA] dark:from-white dark:via-white dark:to-[#627EEA] bg-clip-text text-transparent">
           WalletClear
         </h1>
-        <p className="mt-5 text-lg sm:text-xl text-[#ccc] font-medium">
+        <p className="mt-5 text-lg sm:text-xl text-neutral-600 dark:text-neutral-300 font-medium">
           Understand your crypto wallet in plain English
         </p>
-        <p className="mt-3 text-sm sm:text-base text-[#888] max-w-md leading-relaxed">
+        <p className="mt-3 text-sm sm:text-base text-neutral-500 dark:text-neutral-400 max-w-md leading-relaxed">
           Paste any wallet address or connect your wallet to see your history and balance.
         </p>
       </section>
@@ -78,15 +81,15 @@ export default function Home() {
             className="
               flex flex-col items-center text-center
               px-6 py-8 rounded-2xl
-              bg-[#1a1a1a] border border-[#2a2a2a]
-              hover:border-[#3a3a3a] transition-all duration-200
+              bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#2a2a2a]
+              hover:border-neutral-300 dark:hover:border-[#3a3a3a] shadow-sm dark:shadow-none transition-all duration-200
             "
           >
             <span className="text-3xl mb-4">{feature.icon}</span>
-            <h3 className="text-white font-semibold text-base mb-2">
+            <h3 className="text-black dark:text-white font-semibold text-base mb-2">
               {feature.title}
             </h3>
-            <p className="text-[#888] text-sm leading-relaxed">
+            <p className="text-neutral-500 dark:text-[#888] text-sm leading-relaxed">
               {feature.description}
             </p>
           </div>
@@ -95,7 +98,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-auto pt-16 pb-8">
-        <p className="text-[#555] text-xs sm:text-sm tracking-wide">
+        <p className="text-neutral-400 dark:text-[#555] text-xs sm:text-sm tracking-wide">
           Not a wallet. Read-only. Your keys stay yours.
         </p>
       </footer>

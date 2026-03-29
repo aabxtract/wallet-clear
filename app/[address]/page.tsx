@@ -10,6 +10,7 @@ import EmptyState from "@/components/EmptyState";
 import TransactionCard from "@/components/TransactionCard";
 import AiChat from "@/components/AiChat";
 import ChainSelector from "@/components/ChainSelector";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ---------------------------------------------------------------------------
 // Address page
@@ -89,19 +90,22 @@ export default function AddressPage({
       {/* ---------------------------------------------------------------- */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-bold text-neutral-900 dark:text-white tracking-tight">
             Wallet Analysis
           </h1>
           <p
-            className="text-[#888] text-xs sm:text-sm mt-1 font-mono"
+            className="text-neutral-500 dark:text-[#888] text-xs sm:text-sm mt-1 font-mono"
             title={params.address}
           >
             {shortAddr}
           </p>
         </div>
 
-        {/* Chain selector */}
-        <ChainSelector selected={chain} onChange={setChain} />
+        {/* Chain selector & Theme Toggle */}
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <ChainSelector selected={chain} onChange={setChain} />
+        </div>
       </div>
 
       {/* ---------------------------------------------------------------- */}
@@ -123,7 +127,7 @@ export default function AddressPage({
           {/* -------------------------------------------------------------- */}
           {/* Mobile tab bar (visible < lg)                                   */}
           {/* -------------------------------------------------------------- */}
-          <div className="lg:hidden flex mb-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-1">
+          <div className="lg:hidden flex mb-4 bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#2a2a2a] rounded-xl p-1 shadow-sm dark:shadow-none">
             <button
               onClick={() => setMobileTab("history")}
               className={`
@@ -131,8 +135,8 @@ export default function AddressPage({
                 transition-colors
                 ${
                   mobileTab === "history"
-                    ? "bg-[#2a2a2a] text-white"
-                    : "text-[#666] hover:text-[#999]"
+                    ? "bg-neutral-100 dark:bg-[#2a2a2a] text-neutral-900 dark:text-white shadow-sm dark:shadow-none"
+                    : "text-neutral-500 dark:text-[#666] hover:text-neutral-700 dark:hover:text-[#999]"
                 }
               `}
             >
@@ -145,8 +149,8 @@ export default function AddressPage({
                 transition-colors
                 ${
                   mobileTab === "chat"
-                    ? "bg-[#2a2a2a] text-white"
-                    : "text-[#666] hover:text-[#999]"
+                    ? "bg-neutral-100 dark:bg-[#2a2a2a] text-neutral-900 dark:text-white shadow-sm dark:shadow-none"
+                    : "text-neutral-500 dark:text-[#666] hover:text-neutral-700 dark:hover:text-[#999]"
                 }
               `}
             >
@@ -166,16 +170,16 @@ export default function AddressPage({
             >
               {/* Stats bar */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
-                <span className="text-white text-sm font-semibold">
+                <span className="text-neutral-900 dark:text-white text-sm font-semibold">
                   {transactions.length} Transactions
                 </span>
                 {spamCount > 0 && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-transparent">
                     {spamCount} spam
                   </span>
                 )}
                 {poisoningCount > 0 && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-100 dark:border-transparent">
                     {poisoningCount} poisoning
                   </span>
                 )}

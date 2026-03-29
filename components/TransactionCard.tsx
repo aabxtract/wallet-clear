@@ -101,8 +101,8 @@ function CopyButton({ text }: { text: string }) {
       }}
       className="
         ml-2 px-2 py-0.5 rounded text-xs
-        bg-[#2a2a2a] hover:bg-[#3a3a3a]
-        text-[#888] hover:text-white
+        bg-neutral-200 dark:bg-[#2a2a2a] hover:bg-neutral-300 dark:hover:bg-[#3a3a3a]
+        text-neutral-500 dark:text-[#888] hover:text-neutral-900 dark:hover:text-white
         transition-colors cursor-pointer
       "
     >
@@ -128,20 +128,20 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-[#666] text-xs">{label}</span>
+      <span className="text-neutral-400 dark:text-[#666] text-xs">{label}</span>
       <div className="flex items-center">
         {href ? (
           <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#627EEA] hover:text-[#8da2f0] text-xs transition-colors"
+            className="text-indigo-600 dark:text-[#627EEA] hover:text-indigo-500 dark:hover:text-[#8da2f0] text-xs transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {value} ↗
           </a>
         ) : (
-          <span className="text-[#aaa] text-xs font-mono">{value}</span>
+          <span className="text-neutral-600 dark:text-[#aaa] text-xs font-mono">{value}</span>
         )}
         {showCopy && <CopyButton text={value} />}
       </div>
@@ -177,9 +177,9 @@ export default function TransactionCard({
     <div
       onClick={() => setExpanded(!expanded)}
       className={`
-        bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl
-        hover:bg-[#1e1e1e] transition-all duration-200
-        cursor-pointer select-none
+        bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#2a2a2a] rounded-xl
+        hover:bg-neutral-50 dark:hover:bg-[#1e1e1e] transition-all duration-200
+        cursor-pointer select-none shadow-sm dark:shadow-none
         ${borderClass} ${opacityClass}
       `}
     >
@@ -200,14 +200,14 @@ export default function TransactionCard({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm truncate">
+          <p className="text-neutral-900 dark:text-white font-semibold text-sm truncate">
             {tx.description}
           </p>
-          <p className="text-[#666] text-xs mt-0.5 truncate">
+          <p className="text-neutral-500 dark:text-[#666] text-xs mt-0.5 truncate">
             {tx.fromLabel ?? shortAddr(tx.from)} →{" "}
             {tx.toLabel ?? shortAddr(tx.to)}
           </p>
-          <p className="text-[#555] text-xs mt-0.5">{tx.date}</p>
+          <p className="text-neutral-400 dark:text-[#555] text-xs mt-0.5">{tx.date}</p>
         </div>
 
         {/* Value */}
@@ -221,7 +221,7 @@ export default function TransactionCard({
             {tx.value} {tx.tokenSymbol}
           </p>
           {tx.valueUsd && (
-            <p className="text-[#666] text-xs mt-0.5">
+            <p className="text-neutral-500 dark:text-[#666] text-xs mt-0.5">
               $
               {Number(tx.valueUsd).toLocaleString("en-US", {
                 minimumFractionDigits: 2,
@@ -272,7 +272,7 @@ export default function TransactionCard({
           ${expanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}
         `}
       >
-        <div className="border-t border-[#2a2a2a] mx-3 px-1 py-3 space-y-0.5">
+        <div className="border-t border-neutral-100 dark:border-[#2a2a2a] mx-3 px-1 py-3 space-y-0.5">
           <DetailRow label="Tx Hash" value={shortAddr(tx.hash)} showCopy />
           <DetailRow
             label="From"
