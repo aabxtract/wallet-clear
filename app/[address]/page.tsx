@@ -11,12 +11,22 @@ import TransactionCard from "@/components/TransactionCard";
 import AiChat from "@/components/AiChat";
 import ChainSelector from "@/components/ChainSelector";
 import ThemeToggle from "@/components/ThemeToggle";
+import TransactionFilter, { FilterState } from "@/components/TransactionFilter";
 
 // ---------------------------------------------------------------------------
 // Address page
 // ---------------------------------------------------------------------------
 
 type MobileTab = "history" | "chat";
+
+const INITIAL_FILTERS: FilterState = {
+  types: [],
+  minValue: null,
+  dateRange: "all",
+  customStartDate: null,
+  customEndDate: null,
+  searchQuery: "",
+};
 
 export default function AddressPage({
   params,
@@ -35,12 +45,16 @@ export default function AddressPage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileTab>("history");
+  
+  // -- Filter State --
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
 
   // ---- Fetch transactions ----
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setTransactions([]);
+    setFilters(INITIAL_FILTERS);
 
     try {
       const res = await fetch("/api/transactions", {
@@ -72,6 +86,46 @@ export default function AddressPage({
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // -- Filtering Logic --
+  const filteredTransactions = React.useMemo(() => {
+    return transactions.filter((tx) => {
+      // 1. Search query
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const matchesQuery = 
+          tx.description.toLowerCase().includes(query) ||
+          tx.from.toLowerCase().includes(query) ||
+          tx.to.toLowerCase().includes(query) ||
+          tx.tokenSymbol?.toLowerCase().includes(query);
+        if (!matchesQuery) return false;
+      }
+
+      // 2. Types
+      if (filters.types.length > 0) {
+        if (!filters.types.includes(tx.type)) return false;
+      }
+
+      // 3. Min Value
+      if (filters.minValue !== null) {
+        const val = tx.valueUsd ? Number(tx.valueUsd) : 0;
+        if (val < filters.minValue) return false;
+      }
+
+      // 4. Date range
+      if (filters.dateRange !== "all") {
+        const now = Date.now();
+        const txTime = tx.timestamp;
+        const diff = now - txTime;
+
+        if (filters.dateRange === "24h" && diff > 24 * 60 * 60 * 1000) return false;
+        if (filters.dateRange === "7d" && diff > 7 * 24 * 60 * 60 * 1000) return false;
+        if (filters.dateRange === "30d" && diff > 30 * 24 * 60 * 60 * 1000) return false;
+      }
+
+      return true;
+    });
+  }, [transactions, filters]);
 
   // ---- Derive state ----
   const isEmpty = !isLoading && !error && transactions.length === 0;
@@ -124,6 +178,16 @@ export default function AddressPage({
       {/* Data */}
       {hasData && (
         <>
+          {/* Advanced Filters */}
+          <div className="mb-6">
+            <TransactionFilter
+              filters={filters}
+              setFilters={setFilters}
+              onClear={() => setFilters(INITIAL_FILTERS)}
+              resultCount={filteredTransactions.length}
+            />
+          </div>
+
           {/* -------------------------------------------------------------- */}
           {/* Mobile tab bar (visible < lg)                                   */}
           {/* -------------------------------------------------------------- */}
@@ -171,7 +235,7 @@ export default function AddressPage({
               {/* Stats bar */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
                 <span className="text-neutral-900 dark:text-white text-sm font-semibold">
-                  {transactions.length} Transactions
+                  {filteredTransactions.length} Transactions
                 </span>
                 {spamCount > 0 && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-transparent">
@@ -186,13 +250,25 @@ export default function AddressPage({
               </div>
 
               {/* Transaction cards */}
-              {transactions.map((tx) => (
-                <TransactionCard
-                  key={`${tx.hash}-${tx.type}`}
-                  transaction={tx}
-                  userAddress={params.address}
-                />
-              ))}
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((tx) => (
+                  <TransactionCard
+                    key={`${tx.hash}-${tx.type}`}
+                    transaction={tx}
+                    userAddress={params.address}
+                  />
+                ))
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-900/30 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm">No transactions match your search filters.</p>
+                  <button 
+                    onClick={() => setFilters(INITIAL_FILTERS)}
+                    className="mt-4 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* AI Chat column — shown on desktop always, mobile only when chat tab */}
